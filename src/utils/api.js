@@ -16,16 +16,17 @@ const formatFormData = (data) => {
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/x-www-form-urlencoded'
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'ngrok-skip-browser-warning': 'true'
   }
 });
 
 // Request interceptor - adds auth token to requests
 api.interceptors.request.use(
   (config) => {
-    const tokens = JSON.parse(localStorage.getItem("tokens") || "{}");
-    if (tokens.access_token) {
-      config.headers.Authorization = `Bearer ${tokens.access_token}`;
+    const access_token = localStorage.getItem("access_token") || "";
+    if (access_token) {
+      config.headers.Authorization = `Bearer ${access_token}`;
     }
     return config;
   },
@@ -43,11 +44,11 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const tokens = JSON.parse(localStorage.getItem("tokens") || "{}");
+        const refresh_token = localStorage.getItem("refresh_token") || "";
         
-        if (tokens.refresh_token) {
+        if (refresh_token) {
           // Try to refresh the token
-          const formData = formatFormData({ refresh_token: tokens.refresh_token });
+          const formData = formatFormData({ refresh_token: refresh_token });
           
           const response = await axios.post(`${API_URL}/auth/refresh`, formData, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -55,8 +56,8 @@ api.interceptors.response.use(
           
           // If token refresh was successful
           if (response.data && response.data.access_token) {
-            // Update tokens in localStorage
-            localStorage.setItem("tokens", JSON.stringify(response.data));
+            localStorage.setItem("access_token", response.data.access_token);
+            localStorage.setItem("refresh_token", response.data.refresh_token);
             
             // Update the Authorization header
             originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
@@ -92,7 +93,7 @@ export const authService = {
     const formData = formatFormData({ refresh_token: refreshToken });
     return api.post('/auth/refresh', formData);
   },
-  logout: () => api.post('/auth/logout')
+  logout: () => api.post('/auth/logout'),
 };
 
 export default api; 

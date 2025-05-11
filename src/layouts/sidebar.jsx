@@ -5,7 +5,12 @@ import { cn } from "@/utils/cn";
 import logoLight from "@/assets/logo-light.svg";
 import logoDark from "@/assets/logo-dark.svg";
 
+import { useAuth } from "@/contexts/auth-context";
+import HasPermission from "@/components/HasPermisstion";
+import profileImg from "@/assets/profile-image.jpg";
+
 export const Sidebar = forwardRef(({ collapsed }, ref) => {
+    const { user } = useAuth();
     return (
         <aside
             ref={ref}
@@ -29,7 +34,30 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
                 {!collapsed && <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">Dashboard</p>}
             </div>
             <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
-                {/* Sidebar content removed as requested */}
+                {user && (
+
+                    <div className="flex items-center gap-x-3">
+                        <div className="relative">
+                            <button className="flex items-center gap-x-1">
+                                <div className="size-10 overflow-hidden rounded-full">
+                                    <img
+                                        src={profileImg}
+                                        alt="profile image"
+                                        className="size-full object-cover"
+                                    />
+                                </div>
+                            </button>
+                        </div>
+                        <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">{user.username}</p>
+                    </div>
+                )}
+                <HasPermission resource="employees" action="read">
+                    <p>Chỉnh sửa nhân viên</p>
+                </HasPermission>
+                <HasPermission resource="employeesaaaaaa" action="read">
+                    <p>Chỉnh sửa nhân viên</p>
+                </HasPermission>
+
             </div>
         </aside>
     );
