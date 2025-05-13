@@ -13,6 +13,8 @@ import EmployeesPage from "@/routes/human/employees";
 import PayrollPage from "@/routes/payroll/payroll";
 import AttendancePage from "@/routes/payroll/attendance";
 import MyPayrollPage from "@/routes/payroll/my-payroll";
+import UsersPage from "@/routes/user/users";
+import ReportPage from "@/routes/report/report";
 import NotFoundPage from "@/routes/not-found";
 
 function App() {
@@ -43,7 +45,12 @@ function App() {
                     children: [
                         {
                             index: true,
+                            path: "/",
                             element: <DashboardPage />,
+                        },
+                        {
+                            path: "report",
+                            element: <ReportPage />,
                         },
                         {
                             path: "human",
@@ -60,6 +67,10 @@ function App() {
                         {
                             path: "my-payroll",
                             element: <MyPayrollPage />,
+                        },
+                        {
+                            path: "users",
+                            element: <UsersPage />,
                         },
                     ],
                 },

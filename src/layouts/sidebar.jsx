@@ -31,6 +31,8 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
                 {!collapsed && <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">Dashboard</p>}
             </div>
             <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
+                <a href="/" className="sidebar-item">Trang chủ</a>
+                <a href="/report" className="sidebar-item">Báo cáo</a>
                 <div className="sidebar-group">
                     <h3 className="sidebar-group-title">Quản lý nhân viên</h3>
                     <HasPermission resource="employees" action="read">
@@ -60,7 +62,7 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
                 <div className="sidebar-group">
                     <h3 className="sidebar-group-title">Quản lý người dùng</h3>
                     <HasPermission resource="users" action="read">
-                        <a href="#" className="sidebar-item">Người dùng</a>
+                        <a href="/users" className="sidebar-item">Người dùng</a>
                     </HasPermission>
                     <HasPermission resource="users" action="write">
                         <a href="#" className="sidebar-item">Chỉnh sửa người dùng</a>
