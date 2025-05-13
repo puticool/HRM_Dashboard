@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const LoginPage = () => {
     }
     
     try {
-      const result = await login(username, password);
+      const result = await login(username, password, rememberMe);
       
       if (result.success) {
         navigate("/");
@@ -35,9 +36,14 @@ const LoginPage = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-100 p-4 dark:bg-slate-950">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md dark:bg-slate-900">
-        <h1 className="mb-6 text-center text-2xl font-bold text-slate-900 dark:text-white">
-          Login to Dashboard
-        </h1>
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Welcome Back
+          </h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Sign in to access your dashboard
+          </p>
+        </div>
         
         {error && (
           <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-500 dark:bg-red-900/20 dark:text-red-400">
@@ -55,40 +61,56 @@ const LoginPage = () => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
-              placeholder="username"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
+              placeholder="Enter your username"
               disabled={isLoading}
               required
+              autoFocus
             />
           </div>
           
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Password
-            </label>
+            <div className="mb-1 flex items-center justify-between">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Password
+              </label>
+              <Link 
+                to="/forgot-password" 
+                className="text-xs font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
               placeholder="••••••••"
               disabled={isLoading}
               required
             />
           </div>
           
-          <div className="text-sm text-slate-600 dark:text-slate-400">
-            <p>Use API endpoint:</p>
-            <code className="mt-1 block rounded bg-slate-100 px-2 py-1 font-mono text-xs dark:bg-slate-800">
-              https://ba64-2001-ee0-4b74-f010-fdad-87bd-ad0e-8e02.ngrok-free.app/auth/token
-            </code>
+          <div className="flex items-center">
+            <input
+              id="remember"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800"
+              disabled={isLoading}
+            />
+            <label htmlFor="remember" className="ml-2 block text-sm text-slate-700 dark:text-slate-300">
+              Remember me
+            </label>
           </div>
           
           <button
             type="submit"
             disabled={isLoading}
-            className="flex w-full items-center justify-center rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700"
+            className="flex w-full items-center justify-center rounded-md bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700"
           >
             {isLoading ? (
               <>
@@ -99,15 +121,15 @@ const LoginPage = () => {
                 Logging in...
               </>
             ) : (
-              "Login"
+              "Sign In"
             )}
           </button>
         </form>
         
-        <div className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
-          Don't have an account?{" "}
+        <div className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
+          Dont have an account?{" "}
           <Link to="/register" className="font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400">
-            Register
+            Create an account
           </Link>
         </div>
       </div>

@@ -1,19 +1,21 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 
+// Common loading component to ensure consistency
+const LoadingIndicator = () => (
+  <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
+    <div className="text-center">
+      <div className="mb-4 size-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600"></div>
+    </div>
+  </div>
+);
+
 export const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
   
   // Show loading state while checking authentication
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
-        <div className="text-center">
-          <div className="mb-4 size-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
   
   // If not authenticated, redirect to login
@@ -30,14 +32,7 @@ export const PublicRoute = () => {
   
   // Show loading state while checking authentication
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
-        <div className="text-center">
-          <div className="mb-4 size-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />;
   }
   
   // If already authenticated, redirect to dashboard

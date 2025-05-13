@@ -12,37 +12,65 @@ const AuthContext = createContext({
 	user: null,
 	isLoading: false,
 	isAuthenticated: false,
-	tokens: null
 });
 
 export const AuthProvider = ({ children }) => {
 	const [tokens, setTokens] = useState(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [user, setUser] = useState(null);
+	
+	// Compute isAuthenticated based on user state
+	const isAuthenticated = !!user;
+
 	useEffect(() => {
-		const savedTokens = localStorage.getItem("access_token");
+		const accessToken = localStorage.getItem("access_token");
+		const refreshToken = localStorage.getItem("refresh_token");
 
-		if (savedTokens) {
-			setTokens(savedTokens);
+		if (accessToken && refreshToken) {
+			setTokens({
+				access_token: accessToken,
+				refresh_token: refreshToken
+			});
 
-			// đoạn này nó chuyển sync thành async await nên đừng xóa kẻo ui nó load trước dữ liệu
+			// Get user data on initial load
 			const getUser = async () => {
-				const response = await getMe();
-				localStorage.setItem("user", JSON.stringify(response));
-				setUser(response);
-			}
+				try {
+					const response = await getMe();
+					if (response) {
+						localStorage.setItem("user", JSON.stringify(response));
+						setUser(response);
+					} else {
+						// If user data can't be retrieved, token might be expired
+						const refreshResult = await refreshToken();
+						if (!refreshResult.success) {
+							// If refresh failed, clear everything
+							logout();
+						}
+					}
+				} catch (error) {
+					console.error("Error getting user data:", error);
+					logout();
+				} finally {
+					setIsLoading(false);
+				}
+			};
 			getUser();
+		} else {
+			setIsLoading(false);
 		}
-
-		setIsLoading(false);
 	}, []);
 
 
 	const getMe = async () => {
-		const response = await api.get('/auth/me');
-		if (response.data && response.data.status === 'success') {
-			return response.data.data;
-		} else {
+		try {
+			const response = await api.get('/auth/me');
+			if (response.data && response.data.status === 'success') {
+				return response.data.data;
+			} else {
+				return null;
+			}
+		} catch (error) {
+			console.error("GetMe error:", error);
 			return null;
 		}
 	};
@@ -56,18 +84,35 @@ export const AuthProvider = ({ children }) => {
 
 			// Check if the response has token data
 			if (response.data && response.data.access_token && response.data.refresh_token) {
-
 				// Save token data
-				localStorage.setItem("access_token", response.data.access_token);
-				localStorage.setItem("refresh_token", response.data.refresh_token);
+				const accessToken = response.data.access_token;
+				const refreshToken = response.data.refresh_token;
+				
+				localStorage.setItem("access_token", accessToken);
+				localStorage.setItem("refresh_token", refreshToken);
+				
+				setTokens({
+					access_token: accessToken,
+					refresh_token: refreshToken
+				});
 
-				const response2 = await getMe();
-				localStorage.setItem("user", JSON.stringify(response2));
-				setUser(response2);
-
-				return { success: true };
+				// Get user data
+				const userData = await getMe();
+				if (userData) {
+					localStorage.setItem("user", JSON.stringify(userData));
+					setUser(userData);
+					return { success: true };
+				} else {
+					return { 
+						success: false, 
+						error: "Failed to get user information" 
+					};
+				}
 			} else {
-				return { success: false, error: "Invalid response from server" };
+				return { 
+					success: false, 
+					error: "Invalid response from server" 
+				};
 			}
 		} catch (error) {
 			console.error("Login error:", error);
@@ -99,22 +144,28 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
-	const refreshToken = async () => {
+	const refreshTokenFunc = async () => {
 		try {
 			if (!tokens || !tokens.refresh_token) {
 				logout();
 				return { success: false, error: "No refresh token available" };
 			}
+			
 			const response = await authService.refreshToken(tokens.refresh_token);
 
 			if (response.data && response.data.access_token && response.data.refresh_token) {
+				const accessToken = response.data.access_token;
+				const refreshToken = response.data.refresh_token;
+				
+				// Update tokens in state and localStorage
 				const newTokens = {
-					access_token: response.data.access_token,
-					refresh_token: response.data.refresh_token,
-					token_type: response.data.token_type || "bearer"
+					access_token: accessToken,
+					refresh_token: refreshToken
 				};
+				
 				setTokens(newTokens);
-				localStorage.setItem("tokens", JSON.stringify(newTokens));
+				localStorage.setItem("access_token", accessToken);
+				localStorage.setItem("refresh_token", refreshToken);
 
 				return { success: true, tokens: newTokens };
 			}
@@ -152,6 +203,7 @@ export const AuthProvider = ({ children }) => {
 
 		// Clear local state and storage
 		setTokens(null);
+		setUser(null);
 		localStorage.removeItem("access_token");
 		localStorage.removeItem("refresh_token");
 		localStorage.removeItem("user");
@@ -160,14 +212,13 @@ export const AuthProvider = ({ children }) => {
 	return (
 		<AuthContext.Provider
 			value={{
-				tokens,
 				login,
 				register,
 				logout,
-				refreshToken,
+				refreshToken: refreshTokenFunc,
 				hasPermission,
 				isLoading,
-				isAuthenticated: !!tokens,
+				isAuthenticated,
 				user
 			}}
 		>

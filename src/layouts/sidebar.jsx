@@ -5,12 +5,9 @@ import { cn } from "@/utils/cn";
 import logoLight from "@/assets/logo-light.svg";
 import logoDark from "@/assets/logo-dark.svg";
 
-import { useAuth } from "@/contexts/auth-context";
 import HasPermission from "@/components/HasPermisstion";
-import profileImg from "@/assets/profile-image.jpg";
 
 export const Sidebar = forwardRef(({ collapsed }, ref) => {
-    const { user } = useAuth();
     return (
         <aside
             ref={ref}
@@ -34,30 +31,73 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
                 {!collapsed && <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">Dashboard</p>}
             </div>
             <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
-                {user && (
-
-                    <div className="flex items-center gap-x-3">
-                        <div className="relative">
-                            <button className="flex items-center gap-x-1">
-                                <div className="size-10 overflow-hidden rounded-full">
-                                    <img
-                                        src={profileImg}
-                                        alt="profile image"
-                                        className="size-full object-cover"
-                                    />
-                                </div>
-                            </button>
-                        </div>
-                        <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">{user.username}</p>
-                    </div>
-                )}
-                <HasPermission resource="employees" action="read">
-                    <p>Chỉnh sửa nhân viên</p>
-                </HasPermission>
-                <HasPermission resource="employeesaaaaaa" action="read">
-                    <p>Chỉnh sửa nhân viên</p>
-                </HasPermission>
-
+                <div className="sidebar-group">
+                    <h3 className="sidebar-group-title">Quản lý nhân viên</h3>
+                    <HasPermission resource="employees" action="read">
+                        <a href="/human" className="sidebar-item">Danh sách nhân viên</a>
+                    </HasPermission>
+                    <HasPermission resource="employees" action="read">
+                        <a href="#" className="sidebar-item">Chỉnh sửa nhân viên</a>
+                    </HasPermission>
+                    <HasPermission resource="employees" action="read">
+                        <a href="#" className="sidebar-item">Xoá nhân viên</a>
+                    </HasPermission>
+                </div>
+                
+                <div className="sidebar-group">
+                    <h3 className="sidebar-group-title">Quản lý lương</h3>
+                    <HasPermission resource="salaries" action="read">
+                        <a href="/payroll" className="sidebar-item">Bảng lương</a>
+                    </HasPermission>
+                    <HasPermission resource="salaries" action="read">
+                        <a href="#" className="sidebar-item">Chỉnh sửa bản lương</a>
+                    </HasPermission>
+                    <HasPermission resource="salaries" action="read">
+                        <a href="#" className="sidebar-item">Xoá bản lương</a>
+                    </HasPermission>
+                </div>
+                
+                <div className="sidebar-group">
+                    <h3 className="sidebar-group-title">Quản lý người dùng</h3>
+                    <HasPermission resource="users" action="read">
+                        <a href="#" className="sidebar-item">Người dùng</a>
+                    </HasPermission>
+                    <HasPermission resource="users" action="write">
+                        <a href="#" className="sidebar-item">Chỉnh sửa người dùng</a>
+                    </HasPermission>
+                    <HasPermission resource="users" action="delete">
+                        <a href="#" className="sidebar-item">Xóa người dùng</a>
+                    </HasPermission>
+                </div>
+                
+                <div className="sidebar-group">
+                    <h3 className="sidebar-group-title">Thông tin cá nhân</h3>
+                    <HasPermission resource="salary" action="read">
+                        <a href="/my-payroll" className="sidebar-item">Bảng lương cá nhân</a>
+                    </HasPermission>
+                    <HasPermission resource="salary" action="read">
+                        <a href="#" className="sidebar-item">Thông tin cá nhân</a>
+                    </HasPermission>
+                    <HasPermission resource="user" action="read">
+                        <a href="#" className="sidebar-item">Tài khoản cá nhân</a>
+                    </HasPermission>
+                    <HasPermission resource="user" action="write">
+                        <a href="#" className="sidebar-item">Chỉnh sửa tài khoản cá nhân</a>
+                    </HasPermission>
+                </div>
+                
+                <div className="sidebar-group">
+                    <h3 className="sidebar-group-title">Quản lý chấm công</h3>
+                    <HasPermission resource="attendances" action="read">
+                        <a href="/attendance" className="sidebar-item">Bảng chấm công</a>
+                    </HasPermission>
+                    <HasPermission resource="attendances" action="write">
+                        <a href="#" className="sidebar-item">Cập nhật chấm công</a>
+                    </HasPermission>
+                    <HasPermission resource="attendances" action="delete">
+                        <a href="#" className="sidebar-item">Xóa chấm công</a>
+                    </HasPermission>
+                </div>
             </div>
         </aside>
     );
