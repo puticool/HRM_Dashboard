@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { AuthProvider } from "@/contexts/auth-context";
+import { NotificationProvider } from "@/contexts/notification-context";
 import { ProtectedRoute, PublicRoute } from "@/components/ProtectedRoute";
 
 import Layout from "@/routes/layout";
@@ -14,6 +15,7 @@ import PayrollPage from "@/routes/payroll/payroll";
 import AttendancePage from "@/routes/payroll/attendance";
 import MyPayrollPage from "@/routes/payroll/my-payroll";
 import UsersPage from "@/routes/user/users";
+import NotificationPage from "@/routes/notification/notification";
 import ReportPage from "@/routes/report/report";
 import NotFoundPage from "@/routes/not-found";
 
@@ -53,6 +55,10 @@ function App() {
                             element: <ReportPage />,
                         },
                         {
+                            path: "notification",
+                            element: <NotificationPage />,
+                        },
+                        {
                             path: "human",
                             element: <EmployeesPage />,
                         },
@@ -85,8 +91,10 @@ function App() {
     return (
         <AuthProvider>
             <ThemeProvider storageKey="theme">
-                <RouterProvider router={router} />
-                <Toaster position="top-right" />
+                <NotificationProvider>
+                    <RouterProvider router={router} />
+                    <Toaster position="top-right" />
+                </NotificationProvider>
             </ThemeProvider>
         </AuthProvider>
     );

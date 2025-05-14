@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Search, X, ChevronRight, ArrowRight, ArrowDown } from 'lucide-react';
+import { Search, X, ChevronRight, ArrowRight } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth-context';
@@ -16,6 +16,12 @@ const sidebarNavigation = [
     title: 'Báo cáo', 
     path: '/report', 
     icon: 'BarChart',
+    // No permission needed
+  },
+  {
+    title: 'Thông báo',
+    path: '/notification',
+    icon: 'Bell',
     // No permission needed
   },
   { 

@@ -1,5 +1,8 @@
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/contexts/auth-context";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNotification } from "@/contexts/notification-context";
 
 import { ChevronsLeft, LogOut, Moon, Sun, Bell, Search } from "lucide-react";
 
@@ -7,15 +10,20 @@ import profileImg from "@/assets/profile-image.jpg";
 import SearchModal from "@/components/SearchModal";
 
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
 
 export const Header = ({ collapsed, setCollapsed }) => {
     const { theme, setTheme } = useTheme();
     const { logout } = useAuth();
     const [showSearchModal, setShowSearchModal] = useState(false);
+    const { unreadCount } = useNotification();
+    const navigate = useNavigate();
 
     const handleLogout = () => {
         logout();
+    };
+
+    const navigateToNotifications = () => {
+        navigate('/notification');
     };
 
     const handleModalSearch = (query) => {
@@ -90,9 +98,17 @@ export const Header = ({ collapsed, setCollapsed }) => {
                         />
                     </button>
 
-                    <button className="btn-ghost size-10 relative">
+                    <button 
+                        className="btn-ghost size-10 relative"
+                        onClick={navigateToNotifications}
+                        title="Notifications"
+                    >
                         <Bell size={20} />
-                        <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white dark:border-slate-900"></span>
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-white dark:border-slate-900">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                        )}
                     </button>
                     
                     <div className="relative">

@@ -33,6 +33,7 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
             <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
                 <a href="/" className="sidebar-item">Trang chủ</a>
                 <a href="/report" className="sidebar-item">Báo cáo</a>
+                <a href="/notification" className="sidebar-item">Thông báo</a>
                 <div className="sidebar-group">
                     <h3 className="sidebar-group-title">Quản lý nhân viên</h3>
                     <HasPermission resource="employees" action="read">
