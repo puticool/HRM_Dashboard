@@ -1,5 +1,5 @@
-import React from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import PropTypes from 'prop-types';
 
 const PermissionGuard = ({ resource, action, children }) => {
   const { hasPermission } = useAuth();
@@ -9,6 +9,12 @@ const PermissionGuard = ({ resource, action, children }) => {
   }
 
   return <>{children}</>;
+};
+
+PermissionGuard.propTypes = {
+  resource: PropTypes.string.isRequired,
+  action: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
 };
 
 export default PermissionGuard;

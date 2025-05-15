@@ -46,26 +46,26 @@ const OverviewChart = ({ data, title = "Overview" }) => {
             />
             
             <Bar
-              dataKey="users"
-              name="Users"
+              dataKey="employees"
+              name="Nhân viên"
               fill="#2563eb"
             />
             
             <Bar
-              dataKey="words"
-              name="Words"
+              dataKey="departments"
+              name="Phòng ban"
               fill="#10b981"
             />
             
             <Bar
-              dataKey="topics"
-              name="Topics"
+              dataKey="positions"
+              name="Vị trí"
               fill="#f59e0b"
             />
             
             <Bar
-              dataKey="levels"
-              name="Levels"
+              dataKey="notifications"
+              name="Thông báo"
               fill="#8b5cf6"
             />
           </BarChart>

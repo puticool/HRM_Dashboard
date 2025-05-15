@@ -32,19 +32,7 @@ const sidebarNavigation = [
         path: '/human', 
         icon: 'Users',
         permission: { resource: 'employees', action: 'read' }
-      },
-      { 
-        title: 'Chỉnh sửa nhân viên', 
-        path: '/human/edit', 
-        icon: 'Edit',
-        permission: { resource: 'employees', action: 'write' }
-      },
-      { 
-        title: 'Xoá nhân viên', 
-        path: '/human/delete', 
-        icon: 'Trash',
-        permission: { resource: 'employees', action: 'delete' }
-      },
+      }
     ]
   },
   {
@@ -55,19 +43,7 @@ const sidebarNavigation = [
         path: '/payroll', 
         icon: 'DollarSign',
         permission: { resource: 'salaries', action: 'read' }
-      },
-      { 
-        title: 'Chỉnh sửa bản lương', 
-        path: '/payroll/edit', 
-        icon: 'Edit',
-        permission: { resource: 'salaries', action: 'write' }
-      },
-      { 
-        title: 'Xoá bản lương', 
-        path: '/payroll/delete', 
-        icon: 'Trash',
-        permission: { resource: 'salaries', action: 'delete' }
-      },
+      }
     ]
   },
   {
@@ -78,25 +54,7 @@ const sidebarNavigation = [
         path: '/my-payroll', 
         icon: 'CreditCard',
         permission: { resource: 'salary', action: 'read' }
-      },
-      { 
-        title: 'Thông tin cá nhân', 
-        path: '/profile', 
-        icon: 'User',
-        permission: { resource: 'user', action: 'read' }
-      },
-      { 
-        title: 'Tài khoản cá nhân', 
-        path: '/account', 
-        icon: 'Settings',
-        permission: { resource: 'user', action: 'read' }
-      },
-      { 
-        title: 'Chỉnh sửa tài khoản cá nhân', 
-        path: '/account/edit', 
-        icon: 'Edit',
-        permission: { resource: 'user', action: 'write' }
-      },
+      }
     ]
   },
   {
@@ -107,19 +65,7 @@ const sidebarNavigation = [
         path: '/attendance', 
         icon: 'Calendar',
         permission: { resource: 'attendances', action: 'read' }
-      },
-      { 
-        title: 'Cập nhật chấm công', 
-        path: '/attendance/update', 
-        icon: 'Edit',
-        permission: { resource: 'attendances', action: 'write' }
-      },
-      { 
-        title: 'Xóa chấm công', 
-        path: '/attendance/delete', 
-        icon: 'Trash',
-        permission: { resource: 'attendances', action: 'delete' }
-      },
+      }
     ]
   },
   {
@@ -130,19 +76,7 @@ const sidebarNavigation = [
         path: '/users', 
         icon: 'Users',
         permission: { resource: 'users', action: 'read' }
-      },
-      { 
-        title: 'Chỉnh sửa người dùng', 
-        path: '/users/edit', 
-        icon: 'Edit',
-        permission: { resource: 'users', action: 'write' }
-      },
-      { 
-        title: 'Xóa người dùng', 
-        path: '/users/delete', 
-        icon: 'Trash',
-        permission: { resource: 'users', action: 'delete' }
-      },
+      }
     ]
   }
 ];

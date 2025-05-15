@@ -5,6 +5,8 @@ import { cn } from "@/utils/cn";
 import logoLight from "@/assets/logo-light.svg";
 import logoDark from "@/assets/logo-dark.svg";
 
+import { Home, FileText, Bell, Users, CreditCard, User, Calendar } from "lucide-react";
+
 import HasPermission from "@/components/HasPermisstion";
 
 export const Sidebar = forwardRef(({ collapsed }, ref) => {
@@ -31,74 +33,65 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
                 {!collapsed && <p className="text-lg font-medium text-slate-900 transition-colors dark:text-slate-50">Dashboard</p>}
             </div>
             <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
-                <a href="/" className="sidebar-item">Trang chủ</a>
-                <a href="/report" className="sidebar-item">Báo cáo</a>
-                <a href="/notification" className="sidebar-item">Thông báo</a>
+                <a href="/" className={cn("sidebar-item", collapsed && "md:justify-center")}>
+                    <Home className="h-5 w-5 shrink-0" />
+                    {!collapsed && <span>Trang chủ</span>}
+                </a>
+                <a href="/report" className={cn("sidebar-item", collapsed && "md:justify-center")}>
+                    <FileText className="h-5 w-5 shrink-0" />
+                    {!collapsed && <span>Báo cáo</span>}
+                </a>
+                <a href="/notification" className={cn("sidebar-item", collapsed && "md:justify-center")}>
+                    <Bell className="h-5 w-5 shrink-0" />
+                    {!collapsed && <span>Thông báo</span>}
+                </a>
                 <div className="sidebar-group">
-                    <h3 className="sidebar-group-title">Quản lý nhân viên</h3>
                     <HasPermission resource="employees" action="read">
-                        <a href="/human" className="sidebar-item">Danh sách nhân viên</a>
-                    </HasPermission>
-                    <HasPermission resource="employees" action="read">
-                        <a href="#" className="sidebar-item">Chỉnh sửa nhân viên</a>
-                    </HasPermission>
-                    <HasPermission resource="employees" action="read">
-                        <a href="#" className="sidebar-item">Xoá nhân viên</a>
+                        {!collapsed && <h3 className="sidebar-group-title">Quản lý nhân viên</h3>}
+                        <a href="/human" className={cn("sidebar-item", collapsed && "md:justify-center")}>
+                            <Users className="h-5 w-5 shrink-0" />
+                            {!collapsed && <span>Danh sách nhân viên</span>}
+                        </a>
                     </HasPermission>
                 </div>
                 
                 <div className="sidebar-group">
-                    <h3 className="sidebar-group-title">Quản lý lương</h3>
                     <HasPermission resource="salaries" action="read">
-                        <a href="/payroll" className="sidebar-item">Bảng lương</a>
-                    </HasPermission>
-                    <HasPermission resource="salaries" action="read">
-                        <a href="#" className="sidebar-item">Chỉnh sửa bản lương</a>
-                    </HasPermission>
-                    <HasPermission resource="salaries" action="read">
-                        <a href="#" className="sidebar-item">Xoá bản lương</a>
+                        {!collapsed && <h3 className="sidebar-group-title">Quản lý lương</h3>}
+                        <a href="/payroll" className={cn("sidebar-item", collapsed && "md:justify-center")}>
+                            <CreditCard className="h-5 w-5 shrink-0" />
+                            {!collapsed && <span>Bảng lương</span>}
+                        </a>
                     </HasPermission>
                 </div>
                 
                 <div className="sidebar-group">
-                    <h3 className="sidebar-group-title">Quản lý người dùng</h3>
                     <HasPermission resource="users" action="read">
-                        <a href="/users" className="sidebar-item">Người dùng</a>
-                    </HasPermission>
-                    <HasPermission resource="users" action="write">
-                        <a href="#" className="sidebar-item">Chỉnh sửa người dùng</a>
-                    </HasPermission>
-                    <HasPermission resource="users" action="delete">
-                        <a href="#" className="sidebar-item">Xóa người dùng</a>
+                        {!collapsed && <h3 className="sidebar-group-title">Quản lý người dùng</h3>}
+                        <a href="/users" className={cn("sidebar-item", collapsed && "md:justify-center")}>
+                            <Users className="h-5 w-5 shrink-0" />
+                            {!collapsed && <span>Người dùng</span>}
+                        </a>
                     </HasPermission>
                 </div>
                 
                 <div className="sidebar-group">
-                    <h3 className="sidebar-group-title">Thông tin cá nhân</h3>
                     <HasPermission resource="salary" action="read">
-                        <a href="/my-payroll" className="sidebar-item">Bảng lương cá nhân</a>
-                    </HasPermission>
-                    <HasPermission resource="salary" action="read">
-                        <a href="#" className="sidebar-item">Thông tin cá nhân</a>
-                    </HasPermission>
-                    <HasPermission resource="user" action="read">
-                        <a href="#" className="sidebar-item">Tài khoản cá nhân</a>
-                    </HasPermission>
-                    <HasPermission resource="user" action="write">
-                        <a href="#" className="sidebar-item">Chỉnh sửa tài khoản cá nhân</a>
+                        {!collapsed && <h3 className="sidebar-group-title">Thông tin cá nhân</h3>}
+                        <a href="/my-payroll" className={cn("sidebar-item", collapsed && "md:justify-center")}>
+                            <User className="h-5 w-5 shrink-0" />
+                            {!collapsed && <span>Bảng lương cá nhân</span>}
+                        </a>
                     </HasPermission>
                 </div>
                 
                 <div className="sidebar-group">
-                    <h3 className="sidebar-group-title">Quản lý chấm công</h3>
                     <HasPermission resource="attendances" action="read">
-                        <a href="/attendance" className="sidebar-item">Bảng chấm công</a>
-                    </HasPermission>
-                    <HasPermission resource="attendances" action="write">
-                        <a href="#" className="sidebar-item">Cập nhật chấm công</a>
-                    </HasPermission>
-                    <HasPermission resource="attendances" action="delete">
-                        <a href="#" className="sidebar-item">Xóa chấm công</a>
+                        {!collapsed && <h3 className="sidebar-group-title">Quản lý chấm công</h3>}
+                        <a href="/attendance" className={cn("sidebar-item", collapsed && "md:justify-center")}>
+                            <Calendar className="h-5 w-5 shrink-0" />
+                            {!collapsed && <span>Bảng chấm công</span>}
+                        </a>
                     </HasPermission>
                 </div>
             </div>

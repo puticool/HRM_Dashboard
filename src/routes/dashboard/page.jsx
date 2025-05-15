@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { Footer } from "@/layouts/footer";
-import { BookCopy, Users, WholeWord, SignalHigh } from "lucide-react";
+import { Users, Building2, Briefcase, Bell } from "lucide-react";
 import StatCard from "@/components/Stat-card";
 import OverviewChart from "@/components/Overview";
+import api from "@/utils/api";
 
 const DashboardPage = () => {
-    const [stats] = useState([
-        { title: "Total Users", value: 1254, percentage: 12, icon: Users, iconColor: "blue" },
-        { title: "Total Words", value: 5847, percentage: 8, icon: WholeWord, iconColor: "green" },
-        { title: "Total Topics", value: 42, percentage: 15, icon: BookCopy, iconColor: "amber" },
-        { title: "Total Levels", value: 10, percentage: 5, icon: SignalHigh, iconColor: "purple" }
+    const [stats, setStats] = useState([
+        { title: "Tổng số nhân viên", value: 0, percentage: 12, icon: Users, iconColor: "blue" },
+        { title: "Tổng số phòng ban", value: 0, percentage: 8, icon: Building2, iconColor: "green" },
+        { title: "Tổng số vị trí", value: 0, percentage: 15, icon: Briefcase, iconColor: "amber" },
+        { title: "Tổng số thông báo", value: 0, percentage: 5, icon: Bell, iconColor: "purple" }
     ]);
     
     const [isLoading, setIsLoading] = useState(true);
@@ -23,12 +24,61 @@ const DashboardPage = () => {
     ]);
 
     useEffect(() => {
-        // Simulate loading
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1500);
+        // Fetch data from API
+        const fetchDashboardData = async () => {
+            setIsLoading(true);
+            try {
+                // Fetch employees data
+                const employeeResponse = await api.get('/hr/report/employees');
+                
+                // Fetch departments data
+                const departmentResponse = await api.get('/hr/departments');
+                
+                // Fetch positions data
+                const positionResponse = await api.get('/hr/positions');
+                
+                // Fetch anniversaries/notifications data
+                const anniversariesResponse = await api.get('/hr/employees/anniversaries');
+                
+                // Update stats if requests are successful
+                if (employeeResponse.data?.status === 'success' && 
+                    departmentResponse.data?.status === 'success' &&
+                    positionResponse.data?.status === 'success' &&
+                    anniversariesResponse.data?.status === 'success') {
+                    
+                    setStats(prevStats => {
+                        const newStats = [...prevStats];
+                        // Update employee count
+                        newStats[0] = {
+                            ...newStats[0],
+                            value: employeeResponse.data.data.total_employees
+                        };
+                        // Update department count
+                        newStats[1] = {
+                            ...newStats[1],
+                            value: departmentResponse.data.data.length
+                        };
+                        // Update position count
+                        newStats[2] = {
+                            ...newStats[2],
+                            value: positionResponse.data.data.length
+                        };
+                        // Update notifications count
+                        newStats[3] = {
+                            ...newStats[3],
+                            value: anniversariesResponse.data.data.count
+                        };
+                        return newStats;
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
         
-        return () => clearTimeout(timer);
+        fetchDashboardData();
     }, []);
 
     return (
