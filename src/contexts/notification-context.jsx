@@ -5,7 +5,6 @@ import PropTypes from "prop-types";
 // Create the notification context
 const NotificationContext = createContext(null);
 
-// Custom hook to use the notification context
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {
