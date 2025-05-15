@@ -18,6 +18,7 @@ import AddForm from "@/components/Edit-form";
 const EmployeesPage = () => {
     const [loading, setLoading] = useState(true);
     const [employees, setEmployees] = useState([]);
+    const [filteredEmployees, setFilteredEmployees] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -89,6 +90,9 @@ const EmployeesPage = () => {
             setLoading(false);
         }
     };
+
+
+
 
     // Fetch departments and positions
     const fetchDepartmentsAndPositions = async () => {
@@ -190,8 +194,10 @@ const EmployeesPage = () => {
             fetchEmployees();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, itemsPerPage, searchTerm]);
+    }, [currentPage, itemsPerPage]);
     
+    
+
     // Initial data loading
     useEffect(() => {
         fetchEmployees();
@@ -404,10 +410,25 @@ const EmployeesPage = () => {
 
     // Effect to reset current page when search term changes
     useEffect(() => {
-        if (searchTerm !== undefined) {
-            setCurrentPage(1);
+        if (searchTerm.trim() === "") {
+            setFilteredEmployees(employees);
+        } else {
+            const lowercasedTerm = searchTerm.toLowerCase();
+            console.log(lowercasedTerm);
+            const filtered = employees.filter((employee) => {
+                return (
+                    (employee.FullName && employee.FullName.toLowerCase().includes(lowercasedTerm))  ||
+                    (employee.Email && employee.Email.toLowerCase().includes(lowercasedTerm)) ||
+                    (employee.PhoneNumber && employee.PhoneNumber.toLowerCase().includes(lowercasedTerm)) ||
+                    (employee.department?.DepartmentName && employee.department.DepartmentName.toLowerCase().includes(lowercasedTerm)) ||
+                    (employee.position?.PositionName && employee.position.PositionName.toLowerCase().includes(lowercasedTerm))
+                );
+            });
+            setFilteredEmployees(filtered);
         }
-    }, [searchTerm]);
+        // Reset to first page when search changes
+        setCurrentPage(1);
+    }, [searchTerm, employees]);
 
     return (
         <div className="flex flex-col gap-y-4">
@@ -440,7 +461,7 @@ const EmployeesPage = () => {
 </div>
                 <DataTable 
                     columns={visibleColumnsData}
-                    data={employees}
+                    data={filteredEmployees}
                     isLoading={loading}
                     emptyMessage="Không có dữ liệu nhân viên"
                 />
