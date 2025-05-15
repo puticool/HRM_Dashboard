@@ -146,7 +146,11 @@ const EmployeesPage = () => {
                 DepartmentID: editEmployee.DepartmentID,
                 PositionID: editEmployee.PositionID,
                 Status: editEmployee.Status
-            });
+            }, {
+                headers: {
+                  'Content-Type': 'application/json',
+                }
+              });
 
             if (response.data && response.data.status === 'success') {
                 // Update the employee in the local state

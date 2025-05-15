@@ -50,6 +50,17 @@ const UserForm = ({
                                         required={isNewUser}
                                         minLength={6}
                                     />
+                                    <label className="block text-sm font-medium text-slate-900 mb-1 dark:text-slate-50">
+                                        ID <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="id"
+                                        value={user.id || ''}
+                                        onChange={onChange}
+                                        className="w-full p-2 border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 dark:focus:border-blue-600"
+                                        required={isNewUser}
+                                    />
                                 </div>
                             )}
                             

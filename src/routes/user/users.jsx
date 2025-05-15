@@ -23,9 +23,8 @@ const UsersPage = () => {
         username: "",
         password: "",
         is_active: true,
+        id  : null,
         roles: [],
-        groups: [],
-        permissions: []
     });
     const [rolesList, setRolesList] = useState([]);
     const [updateLoading, setUpdateLoading] = useState(false);
@@ -276,6 +275,7 @@ const UsersPage = () => {
                 username: user.username + "_copy",
                 password: "",
                 is_active: user.is_active,
+                id: user.id,
                 roles: [...user.roles]
             });
         } else {
@@ -284,6 +284,7 @@ const UsersPage = () => {
                 username: "",
                 password: "",
                 is_active: true,
+                id: null,
                 roles: [],
             });
         }
@@ -335,12 +336,16 @@ const UsersPage = () => {
             const roleIds = newUser.roles.map(role => 
                 typeof role === 'object' && role !== null ? role.id : role
             );
-            
             const response = await api.post('/user/create-user', {
                 username: newUser.username,
                 password: newUser.password,
                 is_active: newUser.is_active,
-                role_ids: roleIds
+                roles: roleIds,
+                id: newUser.id
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             });
             console.log(response);
 
