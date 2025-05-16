@@ -36,33 +36,35 @@ const UserForm = ({
                                 />
                             </div>
                             
-                            {isNewUser && (
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-900 mb-1 dark:text-slate-50">
-                                        Mật khẩu <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        value={user.password || ''}
-                                        onChange={onChange}
-                                        className="w-full p-2 border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 dark:focus:border-blue-600"
-                                        required={isNewUser}
-                                        minLength={6}
-                                    />
-                                    <label className="block text-sm font-medium text-slate-900 mb-1 dark:text-slate-50">
-                                        ID <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="password"
-                                        name="id"
-                                        value={user.id || ''}
-                                        onChange={onChange}
-                                        className="w-full p-2 border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 dark:focus:border-blue-600"
-                                        required={isNewUser}
-                                    />
-                                </div>
-                            )}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-900 mb-1 dark:text-slate-50">
+                                    Mật khẩu {isNewUser && <span className="text-red-500">*</span>}
+                                    {!isNewUser && <span className="text-xs text-slate-500 ml-1">(để trống nếu không muốn thay đổi)</span>}
+                                </label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={user.password || ''}
+                                    onChange={onChange}
+                                    className="w-full p-2 border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 dark:focus:border-blue-600"
+                                    required={isNewUser}
+                                    minLength={6}
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-slate-900 mb-1 dark:text-slate-50">
+                                    ID <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="id"
+                                    value={user.id || ''}
+                                    onChange={onChange}
+                                    className="w-full p-2 border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50 dark:focus:border-blue-600"
+                                    required
+                                />
+                            </div>
                             
                             <div>
                                 <label className="block text-sm font-medium text-slate-900 mb-1 dark:text-slate-50">

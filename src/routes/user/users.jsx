@@ -8,6 +8,10 @@ import SearchInput from "@/components/Search";
 import ColumnToggleDropdown from "@/components/Column-toggle";
 import { UserPlus, Edit, Trash } from "lucide-react";
 import UserForm from "@/components/User-form";
+import MonthFilter from "@/components/MonthFilter";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import CustomToast from "@/components/CustomToast";
+
 
 const UsersPage = () => {
     const [loading, setLoading] = useState(true);
@@ -15,10 +19,19 @@ const UsersPage = () => {
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedMonth, setSelectedMonth] = useState("");
     const itemsPerPage = 10;
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [editUser, setEditUser] = useState(null);
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
+    const [editUser, setEditUser] = useState({
+        username: "",
+        password: "",
+        is_active: true,
+        id  : null,
+        roles: [],
+    });
     const [newUser, setNewUser] = useState({
         username: "",
         password: "",
@@ -133,12 +146,22 @@ const UsersPage = () => {
     ];
 
     const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return new Intl.DateTimeFormat('vi-VN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        }).format(date);
+        if (!dateString) return '';
+        
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return ''; // Return empty string for invalid dates
+            }
+            return new Intl.DateTimeFormat('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).format(date);
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return ''; // Return empty string on error
+        }
     };
     // Handle edit user
     const handleEditClick = (user) => {
@@ -187,10 +210,16 @@ const UsersPage = () => {
                 typeof role === 'object' && role !== null ? role.id : role
             );
             
-            const response = await api.put(`/user/info/${editUser.id}`, {
+            const response = await api.put(`/user/users/${editUser.id}`, {
+                id: editUser.id,
                 username: editUser.username,
+                password: editUser.password,
                 is_active: editUser.is_active,
-                role_ids: roleIds
+                roles: roleIds
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             });
 
             if (response.data && response.data.status === 'success') {
@@ -228,13 +257,13 @@ const UsersPage = () => {
                 setUsers(updatedUsers);
                 setFilteredUsers(updatedUsers);
                 setIsEditModalOpen(false);
-                alert('Cập nhật người dùng thành công!');
+                CustomToast.success('Cập nhật người dùng thành công!');
             } else {
                 throw new Error('Failed to update user');
             }
         } catch (err) {
             console.error('Error updating user:', err);
-            alert('Lỗi cập nhật người dùng. Vui lòng thử lại.');
+            CustomToast.error('Lỗi cập nhật người dùng. Vui lòng thử lại.');
         } finally {
             setUpdateLoading(false);
         }
@@ -242,29 +271,39 @@ const UsersPage = () => {
 
     // Handle delete user
     const handleDeleteClick = (user) => {
-        if (window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.username}"?`)) {
-            handleDeleteUser(user.id);
-        }
+        setUserToDelete(user);
+        setIsConfirmDialogOpen(true);
     };
 
-    // Handle delete user
-    const handleDeleteUser = async (userId) => {
+    // Handle delete confirmation
+    const handleConfirmDelete = async () => {
+        if (!userToDelete) return;
+        
         try {
-            const response = await api.delete(`/user/info/${userId}`);
+            const response = await api.delete(`/user/users/${userToDelete.id}`);
             
             if (response.data && response.data.status === 'success') {
                 // Remove the user from the local state
-                const updatedUsers = users.filter(user => user.id !== userId);
+                const updatedUsers = users.filter(user => user.id !== userToDelete.id);
                 setUsers(updatedUsers);
                 setFilteredUsers(updatedUsers);
-                alert('Xóa người dùng thành công!');
+                CustomToast.success('Xóa người dùng thành công!');
             } else {
                 throw new Error('Failed to delete user');
             }
         } catch (err) {
             console.error('Error deleting user:', err);
-            alert('Lỗi xóa người dùng. Vui lòng thử lại.');
+            CustomToast.error('Lỗi xóa người dùng. Vui lòng thử lại.');
+        } finally {
+            setIsConfirmDialogOpen(false);
+            setUserToDelete(null);
         }
+    };
+
+    // Handle delete cancellation
+    const handleCancelDelete = () => {
+        setIsConfirmDialogOpen(false);
+        setUserToDelete(null);
     };
 
     // Handle add user modal
@@ -382,13 +421,13 @@ const UsersPage = () => {
                     is_active: true,
                     roles: []
                 });
-                alert('Thêm người dùng thành công!');
+                CustomToast.success('Thêm người dùng thành công!');
             } else {
                 throw new Error('Failed to add user');
             }
         } catch (err) {
             console.error('Error adding user:', err);
-            alert(`Lỗi thêm người dùng: ${err.response?.data?.message || err.message}`);
+            CustomToast.error(`Lỗi thêm người dùng: ${err.response?.data?.message || err.message}`);
         } finally {
             setAddLoading(false);
         }
@@ -513,13 +552,14 @@ const UsersPage = () => {
         fetchRoles();
     }, []);
 
-    // Filter users based on search term
+    // Filter users based on search term and selected month
     useEffect(() => {
-        if (searchTerm.trim() === "") {
-            setFilteredUsers(users);
-        } else {
+        let filtered = users;
+
+        // Filter by search term
+        if (searchTerm.trim() !== "") {
             const lowercasedTerm = searchTerm.toLowerCase();
-            const filtered = users.filter(user => {
+            filtered = filtered.filter(user => {
                 // Check username and ID
                 if (
                     user.username.toLowerCase().includes(lowercasedTerm) ||
@@ -545,10 +585,20 @@ const UsersPage = () => {
                 
                 return false;
             });
-            setFilteredUsers(filtered);
         }
+
+        // Filter by month
+        if (selectedMonth) {
+            filtered = filtered.filter(user => {
+                const date = new Date(user.created_at);
+                const month = (date.getMonth() + 1).toString();
+                return month === selectedMonth;
+            });
+        }
+
+        setFilteredUsers(filtered);
         setCurrentPage(1);
-    }, [searchTerm, users, rolesList]);
+    }, [searchTerm, selectedMonth, users, rolesList]);
 
     // Calculate pagination
     const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -574,11 +624,16 @@ const UsersPage = () => {
                         <ExportDropdown data={filteredUsers} filename="users_list" />
                     </div>
                     <div className="flex gap-2 items-center">
+                    <MonthFilter
+                            selectedMonth={selectedMonth}
+                            onChange={setSelectedMonth}
+                        />
                         <ColumnToggleDropdown
                             visibleColumns={visibleColumns}
                             setVisibleColumns={setVisibleColumns}
                             columns={columns}
                         />
+                        
                         <SearchInput
                             value={searchTerm}
                             onChange={setSearchTerm}
@@ -630,6 +685,17 @@ const UsersPage = () => {
                 isLoading={addLoading}
                 rolesList={rolesList}
                 isNewUser={true}
+            />
+
+            {/* Confirm Delete Dialog */}
+            <ConfirmDialog
+                isOpen={isConfirmDialogOpen}
+                onClose={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                title="Xác nhận xóa người dùng"
+                message={`Bạn có chắc chắn muốn xóa người dùng "${userToDelete?.username}"?`}
+                confirmText="Xóa"
+                cancelText="Hủy"
             />
         </div>
     );

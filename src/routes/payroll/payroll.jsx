@@ -10,6 +10,7 @@ import Pagination from "@/components/Pagination";
 import ExportDropdown from "@/components/Export";
 import SearchInput from "@/components/Search";
 import ColumnToggleDropdown from "@/components/Column-toggle";
+import MonthFilter from "@/components/MonthFilter";
 
 
 const formatCurrency = (amount) => {
@@ -36,6 +37,7 @@ const PayrollPage = () => {
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedMonth, setSelectedMonth] = useState("");
     const itemsPerPage = 5;
 
     // Column visibility state
@@ -79,13 +81,14 @@ const PayrollPage = () => {
         fetchPayrolls();
     }, []);
 
-    // Filter payrolls based on search term
+    // Filter payrolls based on search term and selected month
     useEffect(() => {
-        if (searchTerm.trim() === "") {
-            setFilteredPayrolls(payrolls);
-        } else {
+        let filtered = payrolls;
+        
+        // Filter by search term
+        if (searchTerm.trim() !== "") {
             const lowercasedTerm = searchTerm.toLowerCase();
-            const filtered = payrolls.filter((payroll) => {
+            filtered = filtered.filter((payroll) => {
                 return (
                     (payroll.employee?.FullName && payroll.employee.FullName.toLowerCase().includes(lowercasedTerm)) ||
                     (payroll.employee?.department?.DepartmentName && payroll.employee.department.DepartmentName.toLowerCase().includes(lowercasedTerm)) ||
@@ -93,11 +96,21 @@ const PayrollPage = () => {
                     (payroll.SalaryID && payroll.SalaryID.toString().includes(lowercasedTerm))
                 );
             });
-            setFilteredPayrolls(filtered);
         }
-        // Reset to first page when search changes
+        
+        // Filter by month
+        if (selectedMonth) {
+            filtered = filtered.filter((payroll) => {
+                const date = new Date(payroll.SalaryMonth);
+                const month = (date.getMonth() + 1).toString();
+                return month === selectedMonth;
+            });
+        }
+        
+        setFilteredPayrolls(filtered);
+        // Reset to first page when filters change
         setCurrentPage(1);
-    }, [searchTerm, payrolls]);
+    }, [searchTerm, selectedMonth, payrolls]);
 
     // Calculate pagination variables
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -265,6 +278,10 @@ const PayrollPage = () => {
                         <ExportDropdown data={filteredPayrolls} filename="payroll_list" />
                     </div>
                     <div className="flex gap-2 items-center">
+                    <MonthFilter
+                            selectedMonth={selectedMonth}
+                            onChange={setSelectedMonth}
+                        />
                         <ColumnToggleDropdown
                             visibleColumns={visibleColumns}
                             setVisibleColumns={setVisibleColumns}

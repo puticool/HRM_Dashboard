@@ -10,6 +10,7 @@ import Pagination from "@/components/Pagination";
 import ExportDropdown from "@/components/Export";
 import SearchInput from "@/components/Search";
 import ColumnToggleDropdown from "@/components/Column-toggle";
+import MonthFilter from "@/components/MonthFilter";
 
 
 const formatDate = (dateString) => {
@@ -28,6 +29,7 @@ const AttendancePage = () => {
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedMonth, setSelectedMonth] = useState("");
     const itemsPerPage = 5;
 
     // Column visibility state
@@ -70,13 +72,14 @@ const AttendancePage = () => {
         fetchAttendances();
     }, []);
 
-    // Filter attendances based on search term
+    // Filter attendances based on search term and selected month
     useEffect(() => {
-        if (searchTerm.trim() === "") {
-            setFilteredAttendances(attendances);
-        } else {
+        let filtered = attendances;
+
+        // Filter by search term
+        if (searchTerm.trim() !== "") {
             const lowercasedTerm = searchTerm.toLowerCase();
-            const filtered = attendances.filter((attendance) => {
+            filtered = filtered.filter((attendance) => {
                 return (
                     (attendance.employee?.FullName && attendance.employee.FullName.toLowerCase().includes(lowercasedTerm)) ||
                     (attendance.employee?.department?.DepartmentName && attendance.employee.department.DepartmentName.toLowerCase().includes(lowercasedTerm)) ||
@@ -85,11 +88,21 @@ const AttendancePage = () => {
                     (attendance.AttendanceMonth && formatDate(attendance.AttendanceMonth).toLowerCase().includes(lowercasedTerm))
                 );
             });
-            setFilteredAttendances(filtered);
         }
-        // Reset to first page when search changes
+
+        // Filter by month
+        if (selectedMonth) {
+            filtered = filtered.filter((attendance) => {
+                const date = new Date(attendance.AttendanceMonth);
+                const month = (date.getMonth() + 1).toString();
+                return month === selectedMonth;
+            });
+        }
+
+        setFilteredAttendances(filtered);
+        // Reset to first page when filters change
         setCurrentPage(1);
-    }, [searchTerm, attendances]);
+    }, [searchTerm, selectedMonth, attendances]);
 
     // Calculate pagination variables
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -242,6 +255,10 @@ const AttendancePage = () => {
                         <ExportDropdown data={filteredAttendances} filename="attendance_list" />
                     </div>
                     <div className="flex gap-2 items-center">
+                    <MonthFilter
+                            selectedMonth={selectedMonth}
+                            onChange={setSelectedMonth}
+                        />
                         <ColumnToggleDropdown
                             visibleColumns={visibleColumns}
                             setVisibleColumns={setVisibleColumns}

@@ -2,30 +2,32 @@ import { Footer } from "@/layouts/footer";
 import { useState, useEffect } from "react";
 import DataTable from "@/components/Table";
 import api from "@/utils/api";
-import { 
-  UserPlus, 
-  Edit, 
-  Trash,
-} from "lucide-react";
-import Pagination from "@/components/Pagination";
+import { UserPlus, Edit, Trash } from "lucide-react";
 import ExportDropdown from "@/components/Export";
 import SearchInput from "@/components/Search";
 import ColumnToggleDropdown from "@/components/Column-toggle";
 import HasPermission from "@/components/HasPermisstion";
-import EditForm from "@/components/Add-form";
-import AddForm from "@/components/Edit-form";
+import AddForm from "@/components/Add-form";
+import EditForm from "@/components/Edit-form";
+import Pagination from "@/components/Pagination";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import MonthFilter from "@/components/MonthFilter";
+import CustomToast from "@/components/CustomToast";
+
+
 
 const EmployeesPage = () => {
     const [loading, setLoading] = useState(true);
     const [employees, setEmployees] = useState([]);
     const [filteredEmployees, setFilteredEmployees] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [totalItems, setTotalItems] = useState(0);
+    const [selectedMonth, setSelectedMonth] = useState("");
     const [editEmployee, setEditEmployee] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
     const [newEmployee, setNewEmployee] = useState({
         FullName: "",
         DateOfBirth: "",
@@ -43,7 +45,12 @@ const EmployeesPage = () => {
     const [statusOptions, setStatusOptions] = useState([]);
     const [updateLoading, setUpdateLoading] = useState(false);
     const [addLoading, setAddLoading] = useState(false);
-    
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState({
+        isOpen: false,
+        employeeId: null
+    });
+
     // Column visibility state
     const [visibleColumns, setVisibleColumns] = useState({
         EmployeeID: true,
@@ -65,22 +72,12 @@ const EmployeesPage = () => {
         try {
             const response = await api.get('/hr/employees', {
                 params: {
-                    page: currentPage,
-                    per_page: itemsPerPage,
                     search: searchTerm.trim() || undefined
                 }
             });
-            
+
             if (response.data && response.data.status === 'success') {
                 setEmployees(response.data.data || []);
-                
-                // Get total from API response
-                const total = response.data.total || 
-                             response.data.meta?.total || 
-                             response.data.pagination?.total || 
-                             response.data.data?.length || 0;
-                             
-                setTotalItems(total);
             } else {
                 throw new Error('Failed to fetch employees data');
             }
@@ -91,20 +88,16 @@ const EmployeesPage = () => {
         }
     };
 
-
-
-
     // Fetch departments and positions
     const fetchDepartmentsAndPositions = async () => {
         try {
             const response = await api.get('/hr/get-data-filter');
-            
+
             if (response.data) {
-                // Direct access to the data properties as they are at the root level
                 if (response.data.departments) {
                     setDepartments(response.data.departments);
                 }
-                
+
                 if (response.data.positions) {
                     setPositions(response.data.positions);
                 }
@@ -138,7 +131,7 @@ const EmployeesPage = () => {
     const handleUpdateEmployee = async (e) => {
         e.preventDefault();
         setUpdateLoading(true);
-        
+
         try {
             const response = await api.put(`/hr/employees/update/${editEmployee.EmployeeID}`, {
                 FullName: editEmployee.FullName,
@@ -152,23 +145,24 @@ const EmployeesPage = () => {
                 Status: editEmployee.Status
             }, {
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 }
-              });
+            });
 
             if (response.data && response.data.status === 'success') {
                 // Update the employee in the local state
-                const updatedEmployees = employees.map(emp => 
-                    emp.EmployeeID === editEmployee.EmployeeID ? {...emp, ...editEmployee} : emp
+                const updatedEmployees = employees.map(emp =>
+                    emp.EmployeeID === editEmployee.EmployeeID ? { ...emp, ...editEmployee } : emp
                 );
                 setEmployees(updatedEmployees);
                 setIsEditModalOpen(false);
+                CustomToast.success('Cập nhật nhân viên thành công!');
             } else {
                 throw new Error('Failed to update employee');
             }
         } catch (err) {
             console.error('Error updating employee:', err);
-            alert('Failed to update employee. Please try again.');
+            CustomToast.error(err.response?.data?.message || 'Lỗi cập nhật nhân viên. Vui lòng thử lại.');
         } finally {
             setUpdateLoading(false);
         }
@@ -183,86 +177,160 @@ const EmployeesPage = () => {
         }));
     };
 
+    // Effect to filter employees when search term or selected month changes
+    useEffect(() => {
+        let filtered = employees;
+
+        // Filter by search term
+        if (searchTerm.trim() !== "") {
+            const lowercasedTerm = searchTerm.toLowerCase();
+            filtered = filtered.filter((employee) => {
+                return (
+                    (employee.FullName && employee.FullName.toLowerCase().includes(lowercasedTerm)) ||
+                    (employee.Email && employee.Email.toLowerCase().includes(lowercasedTerm)) ||
+                    (employee.PhoneNumber && employee.PhoneNumber.toLowerCase().includes(lowercasedTerm)) ||
+                    (employee.department?.DepartmentName && employee.department.DepartmentName.toLowerCase().includes(lowercasedTerm)) ||
+                    (employee.position?.PositionName && employee.position.PositionName.toLowerCase().includes(lowercasedTerm))
+                );
+            });
+        }
+
+        // Filter by month
+        if (selectedMonth) {
+            filtered = filtered.filter((employee) => {
+                if (!employee.HireDate) return false;
+                const hireDate = new Date(employee.HireDate);
+                return hireDate.getMonth() + 1 === parseInt(selectedMonth);
+            });
+        }
+
+        setFilteredEmployees(filtered);
+        setTotalItems(filtered.length);
+        setCurrentPage(1); // Reset to first page when filters change
+    }, [searchTerm, selectedMonth, employees]);
+
+    // Calculate pagination values
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredEmployees.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
     // Handle page change
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
-    // Effect to fetch employees when pagination parameters change
-    useEffect(() => {
-        if (currentPage && itemsPerPage) {
-            fetchEmployees();
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, itemsPerPage]);
-    
-    
+    // Handle items per page change
+    const handleItemsPerPageChange = (newItemsPerPage) => {
+        setItemsPerPage(newItemsPerPage);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
 
     // Initial data loading
     useEffect(() => {
         fetchEmployees();
         fetchDepartmentsAndPositions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Calculate total pages based on total items and items per page
-    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    // Handle initiating delete
+    const handleDeleteClick = (employeeId) => {
+        setDeleteConfirmation({
+            isOpen: true,
+            employeeId: employeeId
+        });
+    };
+
+    // Handle closing delete confirmation
+    const handleCloseDeleteConfirm = () => {
+        setDeleteConfirmation({
+            isOpen: false,
+            employeeId: null
+        });
+    };
+
+    // Handle employee deletion
+    const handleDeleteEmployee = async () => {
+        setDeleteLoading(true);
+        try {
+            const response = await api.delete(`/hr/delete/${deleteConfirmation.employeeId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.data && response.data.status === 'success') {
+                // Remove the employee from the local state
+                const updatedEmployees = employees.filter(emp => emp.EmployeeID !== deleteConfirmation.employeeId);
+                setEmployees(updatedEmployees);
+                CustomToast.success('Xóa nhân viên thành công!');
+            } else {
+                throw new Error('Failed to delete employee');
+            }
+        } catch (err) {
+            console.error('Error deleting employee:', err);
+            CustomToast.error(err.response?.data?.message || 'Không thể xóa. Nhân viên có dữ liệu cổ tức.');
+        } finally {
+            setDeleteLoading(false);
+            handleCloseDeleteConfirm();
+        }
+    };
 
     // Table columns configuration
     const columns = [
-        { 
+        {
             key: "EmployeeID",
             label: "ID",
-            header: "ID", 
-            accessor: "EmployeeID", 
+            header: "ID",
+            accessor: "EmployeeID",
             className: "w-16",
             render: (row) => row.EmployeeID
         },
-        {   
+        {
             key: "FullName",
             label: "Họ và tên",
             header: "Họ và tên",
-            accessor: "FullName" 
+            accessor: "FullName"
         },
-        { 
+        {
             key: "Gender",
             label: "Giới tính",
-            header: "Giới tính", 
+            header: "Giới tính",
             accessor: "Gender",
-            className: "w-20 text-center" 
+            className: "w-20 text-center"
         },
-        { 
+        {
             key: "DepartmentName",
             label: "Phòng ban",
-            header: "Phòng ban", 
+            header: "Phòng ban",
             accessor: "department.DepartmentName",
             render: (row) => row.department?.DepartmentName || "-"
         },
-        { 
+        {
             key: "PositionName",
             label: "Chức vụ",
-            header: "Chức vụ", 
+            header: "Chức vụ",
             accessor: "position.PositionName",
             render: (row) => row.position?.PositionName || "-"
         },
-        { 
+        {
             key: "PhoneNumber",
             label: "Điện thoại",
-            header: "Điện thoại", 
+            header: "Điện thoại",
             accessor: "PhoneNumber",
             className: "whitespace-nowrap"
         },
-        { 
+        {
             key: "Email",
             label: "Email",
-            header: "Email", 
+            header: "Email",
             accessor: "Email",
-            className: "whitespace-nowrap" 
+            className: "whitespace-nowrap"
         },
-        { 
+        {
             key: "Status",
             label: "Trạng thái",
-            header: "Trạng thái", 
+            header: "Trạng thái",
             accessor: "Status",
             className: "whitespace-nowrap",
             render: (row) => {
@@ -274,7 +342,7 @@ const EmployeesPage = () => {
                 } else if (row.Status === "Nghỉ thai sản") {
                     bgColor = "bg-purple-100 text-purple-800";
                 }
-                
+
                 return (
                     <span className={`px-2 py-1 rounded-full text-xs ${bgColor}`}>
                         {row.Status || "Unknown"}
@@ -282,10 +350,10 @@ const EmployeesPage = () => {
                 );
             }
         },
-        { 
+        {
             key: "HireDate",
             label: "Ngày vào",
-            header: "Ngày vào", 
+            header: "Ngày vào",
             accessor: "HireDate",
             className: "whitespace-nowrap",
             render: (row) => row.HireDate ? new Date(row.HireDate).toLocaleDateString('vi-VN') : "-"
@@ -298,29 +366,29 @@ const EmployeesPage = () => {
             render: (row) => (
                 <div className="flex items-center justify-center space-x-1">
                     <HasPermission resource="employees" action="read">
-                    <button className="p-1 text-blue-600 hover:text-blue-800" title="Xem chi tiết"
-                        onClick={() => handleAddClick(row)}
-                    >
-                        <UserPlus className="w-5 h-5" />
-                    </button>
-                    </HasPermission>
-                    <HasPermission resource="employees" action="read">
                         <button 
                             className="p-1 text-green-600 hover:text-green-800" 
-                            title="Chỉnh sửa nhân viên"
+                            title="Chỉnh sửa nhân viên" 
                             onClick={() => handleEditClick(row)}
                         >
                             <Edit className="w-5 h-5" />
                         </button>
                     </HasPermission>
-                    <button className="p-1 text-red-600 hover:text-red-800" title="Xóa">
-                        <Trash className="w-5 h-5" />
-                    </button>
+                    <HasPermission resource="employees" action="delete">
+                        <button 
+                            className="p-1 text-red-600 hover:text-red-800" 
+                            title="Xóa nhân viên"
+                            onClick={() => handleDeleteClick(row.EmployeeID)}
+                            disabled={deleteLoading}
+                        >
+                            <Trash className="w-5 h-5" />
+                        </button>
+                    </HasPermission>
                 </div>
             )
         }
     ];
-    
+
     // Filter columns based on visibility settings
     const visibleColumnsData = columns.filter(col => visibleColumns[col.key]);
 
@@ -358,7 +426,7 @@ const EmployeesPage = () => {
     const handleAddEmployee = async (e) => {
         e.preventDefault();
         setAddLoading(true);
-        
+
         try {
             const payload = {
                 FullName: newEmployee.FullName,
@@ -371,13 +439,16 @@ const EmployeesPage = () => {
                 PositionID: newEmployee.PositionID ? parseInt(newEmployee.PositionID) : null,
                 Status: newEmployee.Status || "Active"
             };
-            
-            const response = await api.post('/hr/employees/add', payload);
+
+            const response = await api.post('/hr/employees/add', payload, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
 
             if (response.data && response.data.status === 'success') {
-                // Add the new employee to the local state
                 fetchEmployees(); // Refresh employee list
-                alert('Thêm nhân viên thành công!');
+                CustomToast.success('Thêm nhân viên thành công!');
                 setIsAddModalOpen(false);
                 // Reset form fields
                 setNewEmployee({
@@ -396,77 +467,61 @@ const EmployeesPage = () => {
             }
         } catch (err) {
             console.error('Error adding employee:', err);
-            alert(`Lỗi: ${err.response?.data?.message || err.message || 'Failed to add employee. Please try again.'}`);
+            CustomToast.error(err.response?.data?.message || 'Lỗi thêm nhân viên. Vui lòng thử lại.');
         } finally {
             setAddLoading(false);
         }
     };
 
-    // Handle changing items per page
-    const handleItemsPerPageChange = (newItemsPerPage) => {
-        setItemsPerPage(newItemsPerPage);
-        setCurrentPage(1); // Reset to first page when changing items per page
-    };
-
-    // Effect to reset current page when search term changes
-    useEffect(() => {
-        if (searchTerm.trim() === "") {
-            setFilteredEmployees(employees);
-        } else {
-            const lowercasedTerm = searchTerm.toLowerCase();
-            console.log(lowercasedTerm);
-            const filtered = employees.filter((employee) => {
-                return (
-                    (employee.FullName && employee.FullName.toLowerCase().includes(lowercasedTerm))  ||
-                    (employee.Email && employee.Email.toLowerCase().includes(lowercasedTerm)) ||
-                    (employee.PhoneNumber && employee.PhoneNumber.toLowerCase().includes(lowercasedTerm)) ||
-                    (employee.department?.DepartmentName && employee.department.DepartmentName.toLowerCase().includes(lowercasedTerm)) ||
-                    (employee.position?.PositionName && employee.position.PositionName.toLowerCase().includes(lowercasedTerm))
-                );
-            });
-            setFilteredEmployees(filtered);
-        }
-        // Reset to first page when search changes
-        setCurrentPage(1);
-    }, [searchTerm, employees]);
-
     return (
         <div className="flex flex-col gap-y-4">
             <div className="flex justify-between items-center">
                 <h1 className="title">Danh sách nhân viên</h1>
+                <button
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors dark:bg-blue-600 dark:hover:bg-blue-700"
+                    onClick={() => handleAddClick()}
+                >
+                    <UserPlus className="w-4 h-4" />
+                    Thêm nhân viên
+                </button>
             </div>
-            
+
             {/* Table Card */}
             <div className="card">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-    <div className="flex gap-2 items-center">
-        <ExportDropdown 
-            data={employees}
-            filename="employees_list"
-        />
-    </div>
-    <div className="flex gap-2 items-center">
-        <ColumnToggleDropdown
-            visibleColumns={visibleColumns}
-            setVisibleColumns={setVisibleColumns}
-            columns={columns}
-        />
-        <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Tìm kiếm nhân viên theo tên, email, SĐT, phòng ban..."
-            className="w-64 md:w-80"
-        />
-    </div>
-</div>
-                <DataTable 
+                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                    <div className="flex gap-2 items-center">
+                        <ExportDropdown
+                            data={employees}
+                            filename="employees_list"
+                        />
+                    </div>
+                    <div className="flex gap-2 items-center">
+                    <MonthFilter
+                            selectedMonth={selectedMonth}
+                            onChange={setSelectedMonth}
+                        />
+                        <ColumnToggleDropdown
+                            visibleColumns={visibleColumns}
+                            setVisibleColumns={setVisibleColumns}
+                            columns={columns}
+                        />
+                        <SearchInput
+                            value={searchTerm}
+                            onChange={setSearchTerm}
+                            placeholder="Tìm kiếm nhân viên theo tên, email, SĐT, phòng ban..."
+                            className="w-64 md:w-80"
+                        />
+                    </div>
+                </div>
+                
+                <DataTable
                     columns={visibleColumnsData}
-                    data={filteredEmployees}
+                    data={currentItems}
                     isLoading={loading}
                     emptyMessage="Không có dữ liệu nhân viên"
                 />
-                
-                <div className="card-footer p-4 border-t border-gray-200">
+
+                <div className="p-4 border-t border-gray-200">
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -474,16 +529,19 @@ const EmployeesPage = () => {
                         totalItems={totalItems}
                         itemsPerPage={itemsPerPage}
                         onItemsPerPageChange={handleItemsPerPageChange}
+                        maxPagesToShow={5}
+                        isLoading={loading}
+                        showJumpToPage={true}
                     />
                 </div>
             </div>
-            
+
             <div className="mt-4">
                 <Footer />
             </div>
 
             {/* Edit Employee Modal using the component */}
-            <EditForm 
+            <EditForm
                 isOpen={isEditModalOpen}
                 onClose={handleCloseModal}
                 employee={editEmployee || {}}
@@ -497,7 +555,7 @@ const EmployeesPage = () => {
             />
 
             {/* Add Employee Modal */}
-            <AddForm 
+            <AddForm
                 isOpen={isAddModalOpen}
                 onClose={handleCloseAddModal}
                 employee={newEmployee}
@@ -508,6 +566,15 @@ const EmployeesPage = () => {
                 positions={positions}
                 genderOptions={genderOptions}
                 statusOptions={statusOptions}
+            />
+
+            {/* Add the ConfirmDialog component at the end */}
+            <ConfirmDialog
+                isOpen={deleteConfirmation.isOpen}
+                onClose={handleCloseDeleteConfirm}
+                onConfirm={handleDeleteEmployee}
+                title="Xác nhận xóa"
+                message="Bạn có chắc chắn muốn xóa nhân viên này?"
             />
         </div>
     );

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API base URL
-export const API_URL = "https://59e4-2001-ee0-4b74-f010-ad41-1bc6-cc80-ddb2.ngrok-free.app";
+export const API_URL = "https://5dd1-2001-ee0-4b74-f010-7d6a-d90d-5ea-d6bb.ngrok-free.app";
 
 // Helper to format data as form-urlencoded
 const formatFormData = (data) => {

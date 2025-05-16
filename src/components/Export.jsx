@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FileDown, ChevronDown } from "lucide-react";
 import PropTypes from "prop-types";
-import toast from "react-hot-toast";
+import CustomToast from "@/components/CustomToast";
 
 const ExportDropdown = ({ data, filename = "export" }) => {
     const [showDropdown, setShowDropdown] = useState(false);
@@ -59,10 +59,10 @@ const ExportDropdown = ({ data, filename = "export" }) => {
         try {
             const csvContent = prepareExportData(',');
             downloadFile(csvContent, 'text/csv;charset=utf-8;', 'csv');
-            toast.success("Data exported successfully as CSV!");
+            CustomToast.success("Xuất dữ liệu CSV thành công!");
             setShowDropdown(false);
         } catch (error) {
-            toast.error("Failed to export data");
+            CustomToast.error("Không thể xuất dữ liệu CSV");
             console.error("Export error:", error);
         }
     }, [prepareExportData, downloadFile]);
@@ -72,10 +72,10 @@ const ExportDropdown = ({ data, filename = "export" }) => {
         try {
             const excelContent = prepareExportData(';');
             downloadFile(excelContent, 'application/vnd.ms-excel', 'xls');
-            toast.success("Data exported successfully as Excel!");
+            CustomToast.success("Xuất dữ liệu Excel thành công!");
             setShowDropdown(false);
         } catch (error) {
-            toast.error("Failed to export data");
+            CustomToast.error("Không thể xuất dữ liệu Excel");
             console.error("Export error:", error);
         }
     }, [prepareExportData, downloadFile]);

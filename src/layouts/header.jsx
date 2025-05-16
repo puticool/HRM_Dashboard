@@ -1,13 +1,13 @@
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/contexts/auth-context";
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useNotification } from "@/contexts/notification-context";
 
 import { ChevronsLeft, LogOut, Moon, Sun, Bell, Search } from "lucide-react";
 
 import profileImg from "@/assets/profile-image.jpg";
 import SearchModal from "@/components/SearchModal";
+// import api from "@/utils/api";
+
 
 import PropTypes from "prop-types";
 
@@ -15,16 +15,12 @@ export const Header = ({ collapsed, setCollapsed }) => {
     const { theme, setTheme } = useTheme();
     const { logout } = useAuth();
     const [showSearchModal, setShowSearchModal] = useState(false);
-    const { unreadCount } = useNotification();
-    const navigate = useNavigate();
 
     const handleLogout = () => {
         logout();
     };
 
-    const navigateToNotifications = () => {
-        navigate('/notification');
-    };
+   
 
     const handleModalSearch = (query) => {
         // Handle search from modal
@@ -100,15 +96,10 @@ export const Header = ({ collapsed, setCollapsed }) => {
 
                     <button 
                         className="btn-ghost size-10 relative"
-                        onClick={navigateToNotifications}
-                        title="Notifications"
+                                           title="Notifications"
                     >
                         <Bell size={20} />
-                        {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-white dark:border-slate-900">
-                                {unreadCount > 9 ? '9+' : unreadCount}
-                            </span>
-                        )}
+                        
                     </button>
                     
                     <div className="relative">
