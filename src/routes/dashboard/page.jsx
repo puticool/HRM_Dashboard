@@ -14,14 +14,7 @@ const DashboardPage = () => {
     ]);
     
     const [isLoading, setIsLoading] = useState(true);
-    const [overviewData] = useState([
-        { name: "Jan", words: 400, users: 100 },
-        { name: "Feb", words: 500, users: 120 },
-        { name: "Mar", words: 650, users: 150 },
-        { name: "Apr", words: 800, users: 180 },
-        { name: "May", words: 950, users: 220 },
-        { name: "Jun", words: 1100, users: 250 }
-    ]);
+    const [overviewData, setOverviewData] = useState([]);
 
     useEffect(() => {
         // Fetch data from API
@@ -39,6 +32,9 @@ const DashboardPage = () => {
                 
                 // Fetch anniversaries/notifications data
                 const anniversariesResponse = await api.get('/hr/employees/anniversaries');
+
+                // Fetch payroll data
+                const payrollResponse = await api.get('/pr/payroll');
                 
                 // Update stats if requests are successful
                 if (employeeResponse.data?.status === 'success' && 
@@ -71,6 +67,55 @@ const DashboardPage = () => {
                         return newStats;
                     });
                 }
+
+                // Process payroll data for overview
+                if (payrollResponse.data?.status === 'success') {
+                    const payrollData = payrollResponse.data.data;
+                    
+                    // Group payroll data by month
+                    const monthlyData = payrollData.reduce((acc, curr) => {
+                        const date = new Date(curr.SalaryMonth);
+                        const monthKey = date.toLocaleString('vi-VN', { month: 'short', year: 'numeric' });
+                        
+                        if (!acc[monthKey]) {
+                            acc[monthKey] = {
+                                baseSalary: 0,
+                                bonus: 0,
+                                deductions: 0,
+                                netSalary: 0,
+                                employeeCount: new Set()
+                            };
+                        }
+                        
+                        acc[monthKey].baseSalary += curr.BaseSalary || 0;
+                        acc[monthKey].bonus += curr.Bonus || 0;
+                        acc[monthKey].deductions += curr.Deductions || 0;
+                        acc[monthKey].netSalary += curr.NetSalary || 0;
+                        if (curr.employee?.EmployeeID) {
+                            acc[monthKey].employeeCount.add(curr.employee.EmployeeID);
+                        }
+                        
+                        return acc;
+                    }, {});
+
+                    // Convert to array and sort by date
+                    const overviewArray = Object.entries(monthlyData)
+                        .map(([month, data]) => ({
+                            name: month,
+                            "Lương cơ bản": Math.round(data.baseSalary),
+                            "Thưởng": Math.round(data.bonus),
+                            "Khấu trừ": Math.round(data.deductions),
+                            "Thực lãnh": Math.round(data.netSalary),
+                            employees: data.employeeCount.size
+                        }))
+                        .sort((a, b) => {
+                            const [monthA, yearA] = a.name.split(" th ");
+                            const [monthB, yearB] = b.name.split(" th ");
+                            return new Date(yearA, parseInt(monthA) - 1) - new Date(yearB, parseInt(monthB) - 1);
+                        });
+
+                    setOverviewData(overviewArray);
+                }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
             } finally {
@@ -98,7 +143,11 @@ const DashboardPage = () => {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <div className="col-span-1 md:col-span-2 lg:col-span-7">
-                    <OverviewChart data={overviewData} title="Overview" />
+                    <OverviewChart 
+                        data={overviewData} 
+                        title="Tổng quan lương theo tháng" 
+                        isLoading={isLoading}
+                    />
                 </div>
             </div>
             <Footer />
