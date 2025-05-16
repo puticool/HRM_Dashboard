@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 import ValidatedInput from "@/components/validation";
 import { validationRules } from "@/utils/validation-utils";
+import CustomToast from "@/components/CustomToast";
+
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -28,6 +30,7 @@ const LoginPage = () => {
       const result = await login(username, password, rememberMe);
       
       if (result.success) {
+        CustomToast.success("Login successful! Welcome back!");
         navigate("/");
       } else {
         setError(result.error || "Invalid credentials");
